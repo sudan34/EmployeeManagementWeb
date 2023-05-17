@@ -7,5 +7,6 @@ namespace EmployeeManagementWeb.Data
     {
         public ApplicationContext(DbContextOptions<ApplicationContext>options) : base(options) { }
         public DbSet<Employee> Employees { get; set; }
+        public DbSet<Image> Images { get; set; }
     }
 }
