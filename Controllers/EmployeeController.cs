@@ -1,7 +1,9 @@
 ﻿using EmployeeManagementWeb.Data;
 using EmployeeManagementWeb.Models;
+using EmployeeManagementWeb.Models.ViewModel;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.NetworkInformation;
+using System.Text;
 
 namespace EmployeeManagementWeb.Controllers
 {
@@ -13,76 +15,75 @@ namespace EmployeeManagementWeb.Controllers
         {
             this.context = context;
         }
+        private static string EveryFirstCharacterCapital(string input)
+        {
+            StringBuilder sb = new StringBuilder();
+            if (!string.IsNullOrEmpty(input))
+            {
+
+                var data = input.Split(' ');
+                //for(int i=0;i<data.Length; i++)
+                //{
+                //    sb.Append(data[i].First().ToString().ToUpper() + data[i].Substring(1) + " ");
+                //}
+
+                foreach (var d in data)
+                {
+                    sb.Append(d.First().ToString().ToUpper() + d.Substring(1) + " ");
+                }
+                sb.Remove(sb.Length - 1, 1);
+            }
+            return sb.ToString();
+        }
         public IActionResult Index()
         {
-            var result = context.Employees.ToList();
-            return View(result);
-        }
+            //Using Merge model
+            //EmployeeDepartmentListViewModel emp = new EmployeeDepartmentListViewModel();
+            //emp.employees = context.Employees.ToList();
+            //emp.departments = context.Departments.ToList();
+            //emp.employees = empData;
+            //emp.departments = depData;
 
-        [HttpGet]
-        public IActionResult Create()
-        {
-            return View();
-        }
 
-        [HttpPost]
-        public IActionResult Create(Employee Model)
-        {
-            if (ModelState.IsValid)
-            {
-                var emp = new Employee();
-                {
-                    emp.Name = Model.Name;
-                    emp.City = Model.City;
-                    emp.State= Model.State;
-                    emp.Salary= Model.Salary;
-                };
-                context.Employees.Add(emp);
-                context.SaveChanges();
-                TempData["error"] = "Record Saved !";
-                return RedirectToAction("Index");
-            }
-            else
-            {
-                TempData["message"] = "Empty field can't sunmit";
-                return View();
-            }
-        }
-        public IActionResult Delete(int id)
-        {
-            var emp = context.Employees.SingleOrDefault(e => e.Id == id);
-            context.Employees.Remove(emp);
-            context.SaveChanges();
-            TempData["error"] = "Record Deleted !";
-            return RedirectToAction("Index");
-        }
-        public IActionResult Edit(int id)
-        {
-            var emp = context.Employees.SingleOrDefault(e => e.Id == id);  
-            var result = new Employee()
-            {
-                Name = emp.Name,
-                City = emp.City,
-                State = emp.State,
-                Salary = emp.Salary
-            };
-            return View(result);
-        }
-        [HttpPost]
-        public IActionResult Edit(Employee model)
-        {
-            var emp = new Employee()
-            {
-                Id= model.Id,
-                Name = model.Name,
-                City = model.City,
-                State = model.State,
-                Salary = model.Salary
-            };
-            context.Employees.Update(emp);
-            context.SaveChanges();
-            TempData["error"] = "Record Updated !";
-            return RedirectToAction("Index");
+            //EmployeeDepartmentListViewModel emp = new EmployeeDepartmentListViewModel();
+            //var empData = context.Employees.FromSqlRaw("Select * from Employees").ToList();
+            //var depData = context.Departments.FromSqlRaw("Select * from Departments").ToList();
+            //emp.employees = empData;
+            //emp.departments = depData;
+
+
+
+
+
+
+            //var data = context.employeeDepartmentSummaryViewModels.FromSqlRaw("select e.EmployeeId,e.FirstName,e.MiddleName,e.LastName,e.Gender,d.DepartmentId,d.DepartmentCode,d.DepartmentName from Employees e join Departments d on e.DepartmentId =d.DepartmentId");
+
+
+            //Using Procedure get the Data
+
+            //var empData = context.Employees.FromSqlRaw("exec GetEmploee");
+            //var depData = context.Departments.FromSqlRaw("exec GetDepartments");
+
+
+            //var result = context.employeeDepartmentSummaryViewModels.FromSqlRaw("exec GetEmployeeDepartmentsList").ToList();
+
+
+            //Using Join Model
+            var data = (from e in context.Employees
+                        join d in context.Departments
+                        on e.DepartmentId equals d.DepartmentId
+                        select new EmployeeDepartmentSummaryViewModel
+                        {
+                            EmployeeId = e.EmployeeId,
+                            FirstName = EveryFirstCharacterCapital(e.FirstName),
+                            MiddleName = EveryFirstCharacterCapital(e.MiddleName),
+                            LastName = EveryFirstCharacterCapital(e.LastName),
+                            Gender = EveryFirstCharacterCapital(e.Gender),
+                            DepartmentCode = d.DepartmentCode.ToUpper(),
+                            DepartmentName = EveryFirstCharacterCapital(d.DepartmentName)
+                        }).ToList();
+
+            return View(data);
         }
 
     }
